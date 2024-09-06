@@ -15,6 +15,7 @@
 # IntelliJ IDEA project files
 /.idea/
 /*.iml
+/target/
 
 # Ignore any `.env` files where sensitive environment variables may be stored
 .env
