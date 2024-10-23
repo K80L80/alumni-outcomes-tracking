@@ -5,7 +5,6 @@ import com.example.plugins.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
@@ -42,14 +41,14 @@ fun Application.configureRouting() {
             val projectUrl = "https://hci-redcap.hci.utah.edu/redcap/api/"
 
             // Create a list of users (this can be dynamic or from input)
-            val users = listOf(
-                User(record_id = "7", first_name = "John", last_name = "Doe"),
-                User(record_id = "8", first_name = "Jane", last_name = "Smith")
+            val trainees = listOf(
+                Trainee(record_id = "7", first_name = "John", last_name = "Doe"),
+                Trainee(record_id = "8", first_name = "Jane", last_name = "Smith")
             )
 
             log.info("About to import records to redcap")
             // Call the function to import the record to RedCap
-            val redCapResponse = importRecordToRedCap(apiToken, projectUrl, users)
+            val redCapResponse = importRecordToRedCap(apiToken, projectUrl, trainees)
 
             // Respond with the result
             call.respondText("RedCap API Response: $redCapResponse")

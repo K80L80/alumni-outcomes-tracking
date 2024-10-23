@@ -1,6 +1,6 @@
 package client
 
-import com.example.plugins.User
+import com.example.plugins.Trainee
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
@@ -9,8 +9,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.netty.handler.logging.LogLevel
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.net.ssl.X509TrustManager
@@ -44,15 +42,15 @@ val client = HttpClient(CIO) {
 
 
 // Function to import records to RedCap with additional flags
-suspend fun importRecordToRedCap(apiToken: String, projectUrl: String, users: List<User>): String {
+suspend fun importRecordToRedCap(apiToken: String, projectUrl: String, trainees: List<Trainee>): String {
     println("Starting RedCap import process...")
 
     // Serialize the list of users to a JSON array
-    val recordData = Json.encodeToString(users)
+    val recordData = Json.encodeToString(trainees)
 
     // Debug: Log the API token and record data (Be cautious in production not to log sensitive information)
     println("API Token: $apiToken")
-    println("Record Data: $users")
+    println("Record Data: $trainees")
 
     // Create a form-encoded payload (just like your cURL request)
     val formParameters = listOf(

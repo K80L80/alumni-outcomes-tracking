@@ -17,7 +17,7 @@ fun Application.configureSerialization() {
     }
 }
 @Serializable
-data class User(
+data class Trainee(
     val record_id: String,
     val first_name: String,
     val last_name: String
