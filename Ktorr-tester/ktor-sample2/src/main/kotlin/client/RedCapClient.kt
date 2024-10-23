@@ -6,8 +6,12 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.netty.handler.logging.LogLevel
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import javax.net.ssl.X509TrustManager
 
 // Create a Ktor HTTP client with JSON serialization support
 val client = HttpClient(CIO) {
@@ -18,26 +22,62 @@ val client = HttpClient(CIO) {
             ignoreUnknownKeys = true
         })
     }
+    //TODO: before for production, resolve the certificate issue
+    //This tells the Ktor client to bypass SSL validation for the specified host
+    engine {
+        https {
+            trustManager = object : X509TrustManager {
+                override fun checkClientTrusted(chain: Array<out java.security.cert.X509Certificate>?, authType: String?) {}
+                override fun checkServerTrusted(chain: Array<out java.security.cert.X509Certificate>?, authType: String?) {}
+                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> = arrayOf()
+            }
+        }
+    }
+
     install(HttpTimeout) {
         requestTimeoutMillis = 60000
     }
+
 }
 
 
 // Function to import records to RedCap with additional flags
 suspend fun importRecordToRedCap(apiToken: String, projectUrl: String, recordData: String): String {
+    println("Starting RedCap import process...")
+
+    // Debug: Log the API token and record data (Be cautious in production not to log sensitive information)
+    println("API Token: $apiToken")
+    println("Record Data: $recordData")
+
+    // Create a form-encoded payload (just like your cURL request)
+    val formParameters = listOf(
+        "token" to apiToken,                   // API token for authentication
+        "content" to "record",                 // Specify the content type (record)
+        "action" to "import",                  // The action to import data
+        "format" to "json",                    // Specify JSON format
+        "type" to "flat",                      // 'flat' format for the data
+        "overwriteBehavior" to "normal",       // Normal overwrite behavior (ignores blank/empty fields)
+        "forceAutoNumber" to "false",          // Do not force auto-numbering for records
+        "data" to recordData,                  // The actual record data
+        "returnContent" to "count",            // Return the count of imported records
+        "returnFormat" to "json"               // Return the response in JSON format
+    ).formUrlEncode()
+
     // Making the POST request to RedCap API
     val response: HttpResponse = client.post(projectUrl) {
-        parameter("token", apiToken)                  // API token for authentication
-        parameter("content", "record")                // Specify the content type (record)
-        parameter("action", "import")                 // The action to import data
-        parameter("format", "json")                   // Specify JSON format
-        parameter("type", "flat")                     // 'flat' format for the data
-        parameter("overwriteBehavior", "normal")      // Normal overwrite behavior (ignores blank/empty fields)
-        parameter("forceAutoNumber", "false")         // Do not force auto-numbering for records
-        parameter("data", recordData)                 // The actual record data
-        parameter("returnContent", "count")           // Return the count of imported records
-        parameter("returnFormat", "json")             // Return the response in JSON format
+        headers {
+            append(HttpHeaders.ContentType, "application/x-www-form-urlencoded")
+            append(HttpHeaders.Accept, "application/json")
+        }
+        setBody(formParameters)  // Set the body as URL-encoded form data
     }
+
+    // Debug: Log the full URL and response
+    println("RedCap Request URL: ${response.request.url}")
+    println("RedCap Response Status: ${response.status}")
+    println("RedCap Response Body: ${response.bodyAsText()}")
+
+    client.close()  // Close the client to free up resources
+
     return response.bodyAsText()                      // Return the response from RedCap as a string
 }
