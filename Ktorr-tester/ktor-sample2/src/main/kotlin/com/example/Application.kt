@@ -20,6 +20,7 @@ fun Application.module() {
     configureMonitoring()
     configureHTTP()
     configureRouting()
+
     // Add your routing for RedCap API testing at the bottom
     val redcapAPItoken = System.getenv("REDCAP_API_TOKEN")
     if (redcapAPItoken == null) {
@@ -36,9 +37,9 @@ fun Application.module() {
             val recordData = """
             [
                 {
-                    "record": "1",
-                    "field_name": "your_field_name",
-                    "value": "your_value"
+                    "record_id": "1",           // Record ID
+                    "first_name": "John",     // Form field: first_name
+                    "last_name": "Doe",       // Form field: last_name 
                 }
             ]
             """
