@@ -40,10 +40,16 @@ fun Application.configureRouting() {
             // Set up your RedCap API details here
             val apiToken = redcapAPItoken
             val projectUrl = "https://hci-redcap.hci.utah.edu/redcap/api/"
-            val recordData = """[{"record_id": "4", "first_name": "John", "last_name": "Doe"}, {"record_id": "5", "first_name": "Jane", "last_name": "Smith"}]"""
+
+            // Create a list of users (this can be dynamic or from input)
+            val users = listOf(
+                User(record_id = "7", first_name = "John", last_name = "Doe"),
+                User(record_id = "8", first_name = "Jane", last_name = "Smith")
+            )
+
             log.info("About to import records to redcap")
             // Call the function to import the record to RedCap
-            val redCapResponse = importRecordToRedCap(apiToken, projectUrl, recordData)
+            val redCapResponse = importRecordToRedCap(apiToken, projectUrl, users)
 
             // Respond with the result
             call.respondText("RedCap API Response: $redCapResponse")
