@@ -41,9 +41,25 @@ fun Application.configureRouting() {
             val projectUrl = "https://hci-redcap.hci.utah.edu/redcap/api/"
 
             // Create a list of users (this can be dynamic or from input)
+            // Create a list of users with the new fields (phone_number and personal_email)
+            // Create a list of users with the new fields (including end_date)
             val trainees = listOf(
-                Trainee(record_id = "7", first_name = "John", last_name = "Doe"),
-                Trainee(record_id = "8", first_name = "Jane", last_name = "Smith")
+                Trainee(
+                    record_id = "9",
+                    first_name = "John",
+                    last_name = "Doe",
+                    phone_number = "555-1234",
+                    personal_email = "john.doe@example.com",
+                    end_date = "2023-10-22"  // Example end date
+                ),
+                Trainee(
+                    record_id = "10",
+                    first_name = "Jane",
+                    last_name = "Smith",
+                    phone_number = "555-5678",
+                    personal_email = "jane.smith@example.com",
+                    end_date = "2023-09-15"  // Example end date
+                )
             )
 
             log.info("About to import records to redcap")
