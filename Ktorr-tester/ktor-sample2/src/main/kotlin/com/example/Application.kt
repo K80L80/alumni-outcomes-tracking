@@ -72,11 +72,4 @@ fun Application.configureRouting() {
     }
 }
 
-//    routing {
-//        post("/importRedCap") {
-//
-
-//        }
-//    }
-//}
 

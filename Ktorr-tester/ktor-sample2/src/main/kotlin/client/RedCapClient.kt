@@ -9,9 +9,29 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.net.ssl.X509TrustManager
+
+// Data class for the export request payload
+@Serializable
+data class RedCapExportRequest(
+    val token: String,
+    val content: String = "record",
+    val format: String = "json",
+    val type: String = "flat",
+    val records: List<String>? = null,  // Optional list of record IDs to export
+    val fields: List<String>? = null    // Optional list of fields to export
+)
+
+@Serializable
+data class RedCapImportRequest(
+    val token: String,
+    val content: String = "record",
+    val format: String = "json",
+    val data: List<Map<String, String>>  // List of records to import
+)
 
 // Create a Ktor HTTP client with JSON serialization support
 val client = HttpClient(CIO) {
