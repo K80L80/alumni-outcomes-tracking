@@ -1,12 +1,7 @@
 package org.example;
 
-
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import java.sql.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MockRAD {
 

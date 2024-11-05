@@ -15,15 +15,15 @@ public class BatchJob
         TraineeDAO traineeDAO = new TraineeDAO();
 
         // Insert test data
-        traineeDAO.createTestTrainees(); //ERRROR
+        traineeDAO.createTestTrainees();
+        System.out.println( "Done inserting test records into in-memory H2 database" );
 
         // Query and print former trainees
         List<Trainee> formerTrainees = traineeDAO.getFormerTrainees();
         System.out.println("Former Trainees:");
         for (Trainee trainee : formerTrainees) {
-            System.out.println(trainee);
+            System.out.println(JSONUtility.toJson(trainee));
         }
-        System.out.println( "Hello World!" );
     }
 }
 
