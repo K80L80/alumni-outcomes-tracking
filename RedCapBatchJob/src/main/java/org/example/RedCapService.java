@@ -28,34 +28,37 @@ public class RedCapService {
         connection.setDoOutput(true); //Allows you to tack on data to body of request
 
         //Preparing Body (ie token, content, action ect)
+        String traineesAsJsonArray = JSONUtility.toJsonArray(trainees); //Serialize the list of users to a JSON array
+        System.out.println("Trainee JSON Array: " + traineesAsJsonArray);
 
         // Prepare form parameters
-        Map<String, String> params = new HashMap<>();
-        params.put("token", apiToken);
-        params.put("content", "record");
-        params.put("action", "import");
-        params.put("format", "json");
-        params.put("type", "flat");
-        params.put("overwriteBehavior", "normal");
-        params.put("forceAutoNumber", "false");
-        params.put("returnContent", "count");
-        params.put("returnFormat", "json");
-
-        //Preparing Body (ie token, content, action ect)
-        String traineesAsJsonArray = JSONUtility.toJsonArray(trainees); //Serialize the list of users to a JSON array
-        params.put("data", traineesAsJsonArray);
+        Map<String, String> payload = new HashMap<>();
+        payload.put("token", apiToken);
+        payload.put("content", "record");
+        payload.put("action", "import");
+        payload.put("format", "json");
+        payload.put("type", "flat");
+        payload.put("overwriteBehavior", "normal");
+        payload.put("forceAutoNumber", "false");
+        payload.put("returnContent", "count");
+        payload.put("returnFormat", "json");
+        payload.put("data", traineesAsJsonArray);
 
         // Encode parameters into x-www-form-urlencoded format
-        String encodedParams = encodeFormParams(params);
+        String formEncodedPayload = encodeFormParams(payload);
+        System.out.println("Form-Encoded Payload: " + formEncodedPayload);
 
         //Write the encoded parameters to the request body
-        writeRequestBody(connection, encodedParams);
+        try (OutputStream os = connection.getOutputStream()) {
+            byte[] input = formEncodedPayload.getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
+        }
 
         // Check the response code
         int responseCode = connection.getResponseCode();
         System.out.println("Response Code: " + responseCode);
-        String payload = getResponse(connection,responseCode);
-        System.out.println("Payload: " + payload);
+        String result = getResponse(connection,responseCode);
+        System.out.println("Payload: " + result);
     }
 
     public static String getResponse(HttpURLConnection connection, int responseCode) throws IOException {

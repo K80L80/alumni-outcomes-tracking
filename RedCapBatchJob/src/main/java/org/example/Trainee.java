@@ -1,5 +1,6 @@
 package org.example;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 @Table(name = "Trainees") //Specifies table name
 public class Trainee {
 
+    @JsonProperty("record_id")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)  // Auto-generate IDs
     private int id;
@@ -29,6 +31,7 @@ public class Trainee {
 
     @JsonProperty("end_date")  // Maps to REDCap field name
     @Column(name = "endDate")  // Maps to database column
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd") // Format date as "YYYY-MM-DD"
     private LocalDate endDate;
 
     @JsonProperty("phone_number")
@@ -41,10 +44,23 @@ public class Trainee {
     private String traineeProgram;
 
     @JsonProperty("start_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd") // Format date as "YYYY-MM-DD"
     private LocalDate startDate;
 
     @JsonProperty("trainee_profile_complete")
     private int traineeProfileComplete;
+
+    // Constructor with all fields except trainee_profile_complete
+    public Trainee(String firstName, String lastName, String email, LocalDate endDate, String phoneNumber, String traineeLevel, String traineeProgram, LocalDate startDate) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.endDate = endDate;
+        this.phoneNumber = phoneNumber;
+        this.traineeLevel = traineeLevel;
+        this.traineeProgram = traineeProgram;
+        this.startDate = startDate;
+    }
 
 
     //Constructor with ID
