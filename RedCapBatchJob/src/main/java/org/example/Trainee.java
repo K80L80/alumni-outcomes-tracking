@@ -1,5 +1,6 @@
 package org.example;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -17,10 +18,34 @@ public class Trainee {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)  // Auto-generate IDs
     private int id;
+    @JsonProperty("first_name") // Maps to REDCap field name
     private String firstName;
+
+    @JsonProperty("last_name")  // Maps to REDCap field name
     private String lastName;
+
+    @JsonProperty("personal_email") // Maps to REDCap field name
     private String email;
-    @Column(name = "endDate") private LocalDate endDate;
+
+    @JsonProperty("end_date")  // Maps to REDCap field name
+    @Column(name = "endDate")  // Maps to database column
+    private LocalDate endDate;
+
+    @JsonProperty("phone_number")
+    private String phoneNumber;
+
+    @JsonProperty("trainee_level")
+    private String traineeLevel;
+
+    @JsonProperty("trainee_program")
+    private String traineeProgram;
+
+    @JsonProperty("start_date")
+    private LocalDate startDate;
+
+    @JsonProperty("trainee_profile_complete")
+    private int traineeProfileComplete;
+
 
     //Constructor with ID
     public Trainee(int id, String firstName, String lastName, String email, LocalDate endDate) {
@@ -85,6 +110,26 @@ public class Trainee {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getTraineeLevel() {
+        return traineeLevel;
+    }
+
+    public String getTraineeProgram() {
+        return traineeProgram;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public int getTraineeProfileComplete() {
+        return traineeProfileComplete;
     }
 }
 
