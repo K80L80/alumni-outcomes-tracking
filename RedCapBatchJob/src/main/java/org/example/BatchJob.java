@@ -11,7 +11,7 @@ public class BatchJob
         System.out.println( "Done inserting test records into in-memory H2 database" );
 
         // Query and print former trainees
-        TraineeDAO traineeDAO = new TraineeDAO();
+        MockRAD traineeDAO = new MockRAD();
         traineeDAO.createMockRadData();
 
         List<Trainee> formerTrainees = traineeDAO.getFormerTrainees();

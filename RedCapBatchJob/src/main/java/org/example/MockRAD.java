@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 //Java Persistence Query Language (JPQL) –– Object-Oriented Queries meaning it operates on java objects instead of database directly
 //Write JPA translates them into SQL
-public class TraineeDAO {
+public class MockRAD {
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("TraineePU");
 
     //Run this query and give me back a list of Trainee objects.
