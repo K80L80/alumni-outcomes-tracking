@@ -1,0 +1,7 @@
+grant {
+    permission javax.security.auth.AuthPermission "getSubject";
+    permission javax.security.auth.AuthPermission "doAsPrivileged";
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+    permission java.net.SocketPermission "*", "connect,resolve";
+};

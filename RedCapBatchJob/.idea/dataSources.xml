@@ -9,5 +9,18 @@
       <jdbc-url>jdbc:h2:~/testDB</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="ResearchAdmin@hci-dbdev.hci.utah.edu" uuid="0b8ee9aa-cbd0-4b7a-bb76-5cc2b277b1fd">
+      <driver-ref>sqlserver.ms</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc-driver>
+      <jdbc-url>jdbc:sqlserver://hci-dbdev.hci.utah.edu:1433;database=ResearchAdmin</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+      <driver-properties>
+        <property name="encrypt" value="True" />
+        <property name="integratedSecurity" value="true" />
+        <property name="trustServerCertificate" value="true" />
+        <property name="DOMAIN" value="HCI" />
+      </driver-properties>
+    </data-source>
   </component>
 </project>
