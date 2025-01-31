@@ -11,44 +11,44 @@ public class BatchJob
 {
     public static void main( String[] args ) throws IOException, URISyntaxException {
 
-            //command line tool works: sqlcmd -S hci-dbdev,1433 -d ResearchAdmin -U 'HCI\u0543505'
+        //command line tool works: sqlcmd -S hci-dbdev,1433 -d ResearchAdmin -U 'HCI\u0543505'
 
-            //Kerberos Authentication + Integrated Security
-            String url = "jdbc:sqlserver://hci-dbdev:1433;databaseName=ResearchAdmin;integratedSecurity=true;authenticationScheme=JavaKerberos;encrypt=true;trustServerCertificate=true;";
+        //Kerberos Authentication + Integrated Security
+        String url = "jdbc:sqlserver://hci-dbdev:1433;databaseName=ResearchAdmin;integratedSecurity=true;authenticationScheme=JavaKerberos;encrypt=true;trustServerCertificate=true;";
 
-            String username = "HCI\\uXXXXXXX"; // Windows domain-style username
-            String password = "XXXXXXX"; // Replace with your actual password
+
+        String username = "HCI\\XXXXXX"; // Windows domain-style username
+        String password = "XXXXX"; // Replace with your actual password
 
         try {
                 // Step 1: Establish a connection
                 System.out.println("about to open connection connected!");
                // String query = "SELECT TOP 15 * FROM TraineeProgram;";
-            String query = """
+            String query =  """
                 SELECT
-                    e.idTraineeExperience,
-                    e.idTrainee,
-                    e.traineeProgramOtherText,
-                    e.startDate,
-                    e.endDate,
-                    l.levelName,
-                    p.programName
+                    r.idResearcher,
+                    r.firstName,
+                    r.preferredName, //TODO: Remove this??
+                    r.lastName,
+                    g.groupName,
+                    rg.startDate, //TODO: I should get end and start date from groupHistory right? 
+                    rg.endDate
+                    
                 FROM
-                    TraineeExperience e
+                    (SELECT * FROM [Group] WHERE idGroup = 119) g
                 INNER JOIN
-                    TraineeLevel l
+                    ResearcherGroupHistory rg
                 ON
-                    e.idTraineeLevel = l.idTraineeLevel
+                    g.idGroup = rg.idGroup
                 INNER JOIN
-                    TraineeProgram p
+                    Researcher r
                 ON
-                     e.idTraineeProgram = p.idTraineeProgram
-                WHERE
-                     e.endDate < GETDATE() AND e.endDate IS NOT NULL;
-                """;
-                Connection connection = DriverManager.getConnection(url, username, password);
-                System.out.println("Database connected!"); //
-                Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
-                ResultSet resultSet = statement.executeQuery(query);
+                    r.idResearcher = rg.idResearcher
+            """;
+            Connection connection = DriverManager.getConnection(url, username, password);
+            System.out.println("Database connected!"); //
+            Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
+            ResultSet resultSet = statement.executeQuery(query);
 
             // Getting metadata to determine column count and names
             ResultSetMetaData metaData = resultSet.getMetaData();
