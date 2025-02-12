@@ -20,7 +20,22 @@ public class DatabaseService {
                 SELECT
                     r.idResearcher AS id_researcher,
                     r.firstName AS first_name,
+                    r.lastName AS last_name,
+                    'katieannestokes@gmail.com' AS personal_email,
                     Min(rgh.endDate) AS [end] -- Gets the oldest training experience end date
+                    FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') AS [end],
+                    '1' AS email_okay,
+                    te.idTraineeProgram AS trainee_program,
+                    FORMAT(DATEADD(MINUTE, 1, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS intial_send_out, -- These time offsets are needed for Redcap to schedule the automated outreach
+                    FORMAT(DATEADD(MINUTE, 5, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year2,
+                    FORMAT(DATEADD(MINUTE, 6, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year3,
+                    FORMAT(DATEADD(MINUTE, 7, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year4,
+                    FORMAT(DATEADD(MINUTE, 8, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year5,
+                    FORMAT(DATEADD(MINUTE, 9, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year6,
+                    FORMAT(DATEADD(MINUTE, 9, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year7,
+                    FORMAT(DATEADD(MINUTE, 10, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year8,
+                    FORMAT(DATEADD(MINUTE, 11, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year9,
+                    FORMAT(DATEADD(MINUTE, 12, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year10
                 FROM Researcher r
                 JOIN ResearcherGroupHistory rgh -- inactive CCSG members have no end date
                 ON r.idResearcher = rgh.idResearcher AND rgh.idGroup = 119
@@ -59,7 +74,17 @@ public class DatabaseService {
                 FOR JSON PATH
             """;
 
-    //For Java Doc –   //For active ccsg trainees it looks for any of them that have training experience that are in the past and will use that end date
+    /**
+     * Retrieves former trainees from the RAD database as a JSON array.
+     *
+     * @param query    The SQL query to execute.
+     * @param dbURL    The database URL.
+     * @param username The database username.
+     * @param password The database password.
+     * @return An {@link ArrayNode} containing former trainees.
+     * @throws JsonProcessingException If JSON processing fails.
+     * @throws RuntimeException        If a database error occurs.
+     */
     public static ArrayNode getFormerTraineeFromRAD(String query,String dbURL,String username, String password) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         try (
@@ -79,11 +104,24 @@ public class DatabaseService {
             } else {
                 throw new IllegalStateException("Expected an ArrayNode but got: " + node.getNodeType());
             }
-        //TODO: deal with empty json?
+        //TODO: Patrick should I be doing something different hear to deal with empty json?
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * A helper method (just for testing) which Executes a SQL query and prints the result in a tabular format.
+     *
+     * <p>This method is for testing purposes. Instead of returning a JSON array,
+     * it formats and prints the database table with proper column spacing.</p>
+     *
+     * @param query    The SQL query to execute.
+     * @param dbURL    The database URL.
+     * @param username The database username.
+     * @param password The database password.
+     * @throws SQLException If a database error occurs.
+     */
 
     //Method just for testing, it prints the table in a tabular form rather than the JSON Array of JSON objects (ie Json Node)
     public static void printTable(String query, String dbURL, String username, String password) throws SQLException {
@@ -115,7 +153,7 @@ public class DatabaseService {
             for (int i = 1; i <= columnCount; i++) { // Columns are 1-indexed
                 Object value = rs.getObject(i); // Dynamically fetch column value
                 if(value == null ){
-                    value = "blank";
+                    value = "null";
                 }
                 if(maxWidth[i-1] < value.toString().length()){
                     maxWidth[i-1] = value.toString().length();
@@ -143,7 +181,7 @@ public class DatabaseService {
             for (int i = 1; i <= columnCount; i++) { //iterate over the cells in that row
                 Object value = rs.getObject(i); //cell value
                 if (value == null) {
-                    value = "blank";
+                    value = "null";
                 }
                 Integer contentLen = value.toString().length();
                 Integer spacesToAdd = maxWidth[i-1] -contentLen;

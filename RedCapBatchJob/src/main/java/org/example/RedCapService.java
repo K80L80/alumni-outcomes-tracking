@@ -24,24 +24,27 @@ public class RedCapService {
 
     public static Set<Integer> fetchResearchIDFromRedcap(String apiToken, String projectUrl) throws URISyntaxException, IOException {
 
+        //TODO: Ask Patrick –Should these error catching statments be somewhere else?
         JsonNode response = RedCapService.getResearchIDs(apiToken, projectUrl);
         if (response.isNull()) {
             System.err.println("API response is empty or null. Skipping processing.");
-            //TODO: Throw error here?
+            //TODO: Ask Patrick should I Throw error here? Or how do you want to deal with API response being null?
         }
 
         if (response.isObject() && response.has("error")) {
             System.err.println("API returned an error: " + response.get("error").asText());
-            //TODO: Throw error here?
+            //TODO: Ask Patrick should I throw error here? Or how do you want to deal with API returning an error message?
         }
 
         if (!response.isArray()) {
-            //TODO: Throw error here?
             System.err.println("Unexpected response format: " + response);
+            //TODO: Ask Patrick should I throw error here? Or how do you want to deal the response not being returned as a JSON array as it should
         }
 
+        //Converts the response into a set
         Set<Integer> researcherIdsSet = new HashSet<>();
-        //No records yet created
+
+        //No records yet created, return empty set
         if(response.isEmpty()) {
             researcherIdsSet = Collections.emptySet();
         }
