@@ -13,19 +13,26 @@ import com.fasterxml.jackson.databind.node.NullNode;
 public class RedCapService {
 
 
+    /**
+     * fetches the trainees from the Redcap API and formats the response as a set (researcher ids).
+     * Also deals with errors if the API returned something other than an JSON Array of trainees
+     *
+     * @param projectUrl is the Redcap project URL
+     * @param apiToken is the API token given by Redcap for a specific user
+     * @return trainees a set of (researcher_id, first_name, last_name..ect) or throw an error if there is one
+     */
+
     public static Set<Integer> fetchResearchIDFromRedcap(String apiToken, String projectUrl) throws URISyntaxException, IOException {
 
         JsonNode response = RedCapService.getResearchIDs(apiToken, projectUrl);
         if (response.isNull()) {
             System.err.println("API response is empty or null. Skipping processing.");
             //TODO: Throw error here?
-            return null;
         }
 
         if (response.isObject() && response.has("error")) {
             System.err.println("API returned an error: " + response.get("error").asText());
             //TODO: Throw error here?
-            return null;
         }
 
         if (!response.isArray()) {
@@ -39,15 +46,14 @@ public class RedCapService {
             researcherIdsSet = Collections.emptySet();
         }
 
-        // Iterate over array and extract researcher_id
+        // Iterate over JSON array and extract researcher_id
         if (response.isArray()) {
             for (JsonNode researcher : response) {
-                int researcherId = researcher.get("record_id").asInt();
+                int researcherId = researcher.get("id_researcher").asInt();
                 researcherIdsSet.add(researcherId);  // Ensures uniqueness
             }
         }
         //System.out.println(response.toPrettyString());
-        //TODO: Compare this with the databas
         return researcherIdsSet;
     }
 
@@ -142,7 +148,7 @@ public class RedCapService {
         payload.put("action", "export");
         payload.put("format", "json");
         payload.put("type", "flat");
-        payload.put("fields", "record_id");
+        payload.put("fields", "id_researcher");
         payload.put("forms", "trainee_contact");
         payload.put("events", "baseline_arm_1");
         payload.put("rawOrLabel", "raw");

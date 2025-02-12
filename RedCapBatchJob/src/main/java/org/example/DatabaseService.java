@@ -1,7 +1,9 @@
 package org.example;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -58,7 +60,7 @@ public class DatabaseService {
             """;
 
     //For Java Doc –   //For active ccsg trainees it looks for any of them that have training experience that are in the past and will use that end date
-    public static JsonNode getFormerTraineeFromRAD(String query,String dbURL,String username, String password) {
+    public static ArrayNode getFormerTraineeFromRAD(String query,String dbURL,String username, String password) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         try (
             Connection connection = DriverManager.getConnection(dbURL, username, password);
@@ -71,16 +73,15 @@ public class DatabaseService {
                 json = rs.getString(1);  // JSON is returned as a single column
                 // Pretty print JSON
             }
-            return mapper.readTree(json);
-            //TODO: deal with empty json?
-        }
-        catch (SQLException e){
-            //TODO:  throw exception? or e.printStackTrace(); // Log properly in production
-            return mapper.createObjectNode().put("error", "Database connection failed");
-        }
-        catch (com.fasterxml.jackson.core.JsonProcessingException e){
-            //TODO:  throw exception? or e.printStackTrace(); // Log properly in production
-            return mapper.createObjectNode().put("error", "JSON processing error");
+            JsonNode node = mapper.readTree(json);
+            if (node.isArray()) {
+                return (ArrayNode) node; // Safe cast since we check isArray()
+            } else {
+                throw new IllegalStateException("Expected an ArrayNode but got: " + node.getNodeType());
+            }
+        //TODO: deal with empty json?
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
