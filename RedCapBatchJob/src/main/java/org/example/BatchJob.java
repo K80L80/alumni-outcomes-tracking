@@ -1,152 +1,62 @@
 package org.example;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.h2.store.Data;
+
 import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public class BatchJob
-{
-    public static void main( String[] args ) throws IOException, URISyntaxException {
+public class BatchJob {
 
-        //command line tool works: sqlcmd -S hci-dbdev,1433 -d ResearchAdmin -U 'HCI\u0543505'
+    public static void main( String[] args ){
+        //Kerberos Authentication + Integrated Security //command line tool works: sqlcmd -S hci-dbdev,1433 -d ResearchAdmin -U 'HCI\u0543505'
+        String dbUrl = "jdbc:sqlserver://hci-dbdev:1433;databaseName=ResearchAdmin;integratedSecurity=true;authenticationScheme=JavaKerberos;encrypt=true;trustServerCertificate=true;";
 
-        //Kerberos Authentication + Integrated Security
-        String url = "jdbc:sqlserver://hci-dbdev:1433;databaseName=ResearchAdmin;integratedSecurity=true;authenticationScheme=JavaKerberos;encrypt=true;trustServerCertificate=true;";
+        String dbUsername = System.getenv("DB_USERNAME");
+        String dbPassword = System.getenv("DB_PASSWORD");
 
+        if (dbUsername == null || dbPassword == null) {
+            throw new IllegalStateException("Database credentials are not set in environment variables.");
+        }
 
-        String username = "HCI\\XXXXXX"; // Windows domain-style username
-        String password = "XXXXX"; // Replace with your actual password
+        String redCapApiToken = "FD486BE328013358B9BCBDA6439B2343";
+        String redCapUrl = "https://hci-redcap.hci.utah.edu/redcap/api/";
 
         try {
-                // Step 1: Establish a connection
-                System.out.println("about to open connection connected!");
-               // String query = "SELECT TOP 15 * FROM TraineeProgram;";
-            String query =  """
-                SELECT
-                    r.idResearcher,
-                    r.firstName,
-                    r.preferredName, //TODO: Remove this??
-                    r.lastName,
-                    g.groupName,
-                    rg.startDate, //TODO: I should get end and start date from groupHistory right? 
-                    rg.endDate
-                    
-                FROM
-                    (SELECT * FROM [Group] WHERE idGroup = 119) g
-                INNER JOIN
-                    ResearcherGroupHistory rg
-                ON
-                    g.idGroup = rg.idGroup
-                INNER JOIN
-                    Researcher r
-                ON
-                    r.idResearcher = rg.idResearcher
-            """;
-            Connection connection = DriverManager.getConnection(url, username, password);
-            System.out.println("Database connected!"); //
-            Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
-            ResultSet resultSet = statement.executeQuery(query);
+            //Queries Redcap system for former trainees contaied in project (just research_ids)
+            SSLHelper.disableCertificateValidation(); //TODO: Fix this... had to disable SSL verification in dev b/c unable to verify redcap's SSL certificate
+            Set<Integer> researcherIdsSet = RedCapService.fetchResearchIDFromRedcap(redCapApiToken, redCapUrl);
+            System.out.println("Redcap query for researcher_ids: \n" + researcherIdsSet);
 
-            // Getting metadata to determine column count and names
-            ResultSetMetaData metaData = resultSet.getMetaData();
-            int columnCount = metaData.getColumnCount();
-            System.out.println("column count"+columnCount);
+            //Queries RAD Database for former trainees (full info– research_ids, first_name, last_name, ect.)
+            JsonNode fullTraineeRecords = DatabaseService.getFormerTraineeFromRAD(DatabaseService.QUERY,dbUrl,dbUsername,dbPassword);
+            System.out.println("Database query for all trainees in training group:\n " + fullTraineeRecords.toPrettyString());
 
-            // Array to track max lengths for each column
-            int[] maxWidth = new int[columnCount];
-            ArrayList<String> colNamesArr = new ArrayList<>();
+            //TODO: check what records are contained in Redcap that overlap with this query don't insert those, only the ones that have unqique record_ids
 
-            //Initialize max width as the column name length (ie 'isFaculty len = 9)
-            for(int i =1; i <= columnCount; i++){//1,2,3,4,5
-                String columnName = metaData.getColumnName(i); // Get the column name
-                colNamesArr.add(i - 1, columnName);
-                maxWidth[i-1] = columnName.length(); //0,1,2,3,4
-//                System.out.println(columnName +" "+ maxWidth[i-1]);
-            }
+            //Imports only new trainees into Redcap System (ie not already contained)
+            JsonNode importStatus = RedCapService.importRecordToRedCap(redCapUrl,fullTraineeRecords,redCapApiToken);
+            System.out.println("Result of import attempt (returns ids of successfully imported records):\n" + importStatus.toPrettyString());
 
-            //Change max width as needed if the values in the column are larger than the column name
-            while (resultSet.next()) { //each next corresponds to a row
-                //then once on a specific row you can retrieve the data by column
-                for (int i = 1; i <= columnCount; i++) { // Columns are 1-indexed
-                    Object value = resultSet.getObject(i); // Dynamically fetch column value
-                    if(value == null ){
-                        value = "blank";
-                    }
-                    if(maxWidth[i-1] < value.toString().length()){
-                        maxWidth[i-1] = value.toString().length();
-                    }
-                }
-            }
-            resultSet.beforeFirst();
-
-            //print column names with the appropriate width
-            StringBuilder colNames = new StringBuilder();
-
-            resultSet.beforeFirst(); // Move back to the start
-            //space column names according to max width
-            for (int i = 1; i <= columnCount; i++) {
-                int spacesToAdd = maxWidth[i-1] - metaData.getColumnName(i).length(); //at least one space
-                colNames.append(metaData.getColumnName(i)).append(" ".repeat(spacesToAdd)).append(" | ");
-            }
-
-            //Build table with proper spacing
-            StringBuilder table = new StringBuilder();
-            table.append(colNames.append("\n")); // add column names
-            //get the row
-            while (resultSet.next()){
-                StringBuilder row = new StringBuilder();
-                for (int i = 1; i <= columnCount; i++) { //iterate over the cells in that row
-                    Object value = resultSet.getObject(i); //cell value
-                    if (value == null) {
-                        value = "blank";
-                    }
-                    Integer contentLen = value.toString().length();
-                    Integer spacesToAdd = maxWidth[i-1] -contentLen;
-                    row.append(value.toString()).append(" ".repeat(spacesToAdd)).append(" | "); //always add at least one space maybe more
-                }
-                //Add the row to the table
-                table.append(row.append("\n"));
-            }
-
-            System.out.println(table);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-           //TODO: REMOVE ALL STUFF ABOVE THIS LINE AND UNCOMMENT EVERYTHING UNDERNEATH IT
-
-//        // Creating tester table and adding fake records
-//        System.out.println( "Done inserting test records into in-memory H2 database" );
-//
-//        // Query and print former trainees
-//        MockRAD traineeDAO = new MockRAD();
-//        traineeDAO.createMockRadData();
-//
-//        List<Trainee> formerTrainees = traineeDAO.getFormerTrainees();
-//        System.out.println("Former Trainees:");
-//        for (Trainee trainee : formerTrainees) {
-//            System.out.println(JSONUtility.toJson(trainee));
-//        }
-//
-//        String apiToken = "FD486BE328013358B9BCBDA6439B2343";
-//        String projectUrl = "https://hci-redcap.hci.utah.edu/redcap/api/";
-//
-//        //Uses Redcaps API to import records
-//        SSLHelper.disableCertificateValidation(); //TODO: Fix this... had to disable SSL verification in dev b/c unable to verify redcap's SSL certificate
-//
-//        RedCapService.importRecordToRedCap(apiToken,projectUrl,formerTrainees);
-//    } catch (SQLException e) {
-//            throw new RuntimeException(e);
+            //TODO: Do something if there is a discrpancy between Trainees attempted to insert and trainees who actually got inserted
+        }
+        catch (IOException e){
+            System.err.println("Network or API error: " + e.getMessage());
+            e.printStackTrace();  // Log full error details for debugging
+        }
+        catch (URISyntaxException e) {
+            System.err.println("Invalid API URL: " + e.getMessage());
+        }
+        catch (Exception e) {
+            System.err.println("Unexpected error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
-
-
-
-
+}
 
 
 
