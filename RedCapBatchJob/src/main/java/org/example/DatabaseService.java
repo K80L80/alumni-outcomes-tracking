@@ -15,6 +15,8 @@ public class DatabaseService {
     //TODO: Clarify with Melanie Ward if those from training group history table should only be included or if those from active trainees (ie in the Researcher Group should be included in the case they had a program specific participation which ended while they are still active members)
 
     //For former trainee members who have left it looks at their oldest end date
+    //TODO: remove static tester phone # and email, add real contact phone number and email (see query fragment at bottom of this page)
+
     static String QUERY2 =
             """
                 SELECT
@@ -43,6 +45,7 @@ public class DatabaseService {
             """;
 
     //active trainees (with training experience in the past)
+    //TODO: remove static tester phone # and email,add real contact phone number and email (see query fragment at bottom of this page)
     static String QUERY =
             """
                 SELECT
@@ -55,7 +58,11 @@ public class DatabaseService {
                     FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') AS [end],
                     '1' AS email_okay,
                     te.idTraineeProgram AS trainee_program,
-                    FORMAT(DATEADD(MINUTE, 1, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS intial_send_out,
+                    CASE WHEN
+                        te.idTraineeProgram  = 16 THEN '5FTF Program Alum'
+                        ELSE 'Trainee Alum'
+                    END AS alum_type,
+                    FORMAT(DATEADD(MINUTE, 1, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS intial_send_out,-- These time offsets are needed for Redcap to schedule the automated outreach
                     FORMAT(DATEADD(MINUTE, 5, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year2,
                     FORMAT(DATEADD(MINUTE, 6, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year3,
                     FORMAT(DATEADD(MINUTE, 7, GETDATE()), 'yyyy-MM-dd HH:mm:ss') AS offset_year4,
@@ -194,3 +201,18 @@ public class DatabaseService {
         System.out.println(table);
     }
 }
+
+//TODO: Add this to the query to get real contact information
+//TODO: Add this to the select clause....
+//    MAX(CASE WHEN ct.idContactType = 1 THEN roc.contact END) AS email,
+//    MAX(CASE WHEN ct.idContactType = 2 THEN roc.contact END) AS phone
+
+//TODO: Add this to the Join clauses
+//    LEFT JOIN
+//    ResearcherOtherContact roc
+//    ON
+//    roc.idResearcher = r.idResearcher
+//    LEFT JOIN
+//    ContactType ct
+//    ON
+//    ct.idContactType = roc.idContactType
